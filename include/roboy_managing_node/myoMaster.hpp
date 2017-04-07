@@ -29,10 +29,12 @@
 #define SUBNET_MASK         0xFFFFFF00          // 255.255.255.0
 #define DEFAULT_GATEWAY     0xC0A864FE          // 192.168.100.C_ADR_RT1_DEF_NODE_ID
 
-//#define RUN_IN_THREAD
+#define RUN_IN_THREAD
 
 #include "UDPSocket.hpp"
-#include "myoFPGA.pb.h"
+
+#undef min
+#undef max
 
 #include <thread>
 #include <sys/stat.h>
@@ -40,7 +42,8 @@
 #include <communication/MotorConfig.h>
 #include <communication/MotorStatus.h>
 #include <communication/MotorCommand.h>
-
+#include "/home/roboy/workspace/myoFPGA/myoFPGA/build/roboy_managing_node/myoFPGA.pb.h"
+#include <mutex>
 
 typedef struct
 {
@@ -56,6 +59,10 @@ class MyoMaster{
 public:
     MyoMaster(int argc, char* argv[]);
     ~MyoMaster();
+    /**
+     * Initilializes openpowerlink
+     */
+    void initialize();
     /**
 	 * This is the main loop, receiving commands and sending motor status via powerlink
 	 */
@@ -209,4 +216,7 @@ private:
     ros::NodeHandlePtr nh;
     static ros::Publisher motorConfig;
     ros::Subscriber motorStatus, motorCommand;
+    static tOptions opts;
+public:
+    static mutex mux;
 };

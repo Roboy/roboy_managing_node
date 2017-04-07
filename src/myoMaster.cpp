@@ -1,4 +1,4 @@
-#include "myoMaster.hpp"
+#include "roboy_managing_node/myoMaster.hpp"
 
 static BOOL* pfGsOff_l;
 
@@ -10,11 +10,11 @@ int32_t MyoMaster::setPoints[14];
 control_Parameters_t MyoMaster::MotorConfig;
 bool MyoMaster::fExit = false;
 ros::Publisher MyoMaster::motorConfig;
+tOptions MyoMaster::opts;
+mutex MyoMaster::mux;
 
 MyoMaster::MyoMaster(int argc, char *argv[]) {
     if (!ros::isInitialized()) {
-        int argc = 0;
-        char **argv = NULL;
         ros::init(argc, argv, "roboy_managing_node",
                   ros::init_options::NoSigintHandler |
                           ros::init_options::AnonymousName |
@@ -26,13 +26,24 @@ MyoMaster::MyoMaster(int argc, char *argv[]) {
     motorCommand = nh->subscribe("/roboy/MotorCommand", 1, &MyoMaster::MotorCommand, this);
     motorConfig = nh->advertise<communication::MotorConfig>("/roboy/MotorConfig", 1);
 
+    if (getOptions(argc, argv, &opts) < 0)
+        ROS_WARN("invalid command line params");
+}
+
+MyoMaster::~MyoMaster() {
+    fExit = true;
+#ifdef RUN_IN_THREAD
+    if(powerLinkThread->joinable())
+        powerLinkThread->join();
+#endif
+    shutdownPowerlink();
+    system_exit();
+}
+
+void MyoMaster::initialize(){
     tOplkError ret = kErrorOk;
-    tOptions opts;
 
     bool powerlink_initialized = true;
-
-    if (getOptions(argc, argv, &opts) < 0)
-        powerlink_initialized = false;
 
     if (system_init() != 0) {
         ROS_ERROR("Error initializing system!");
@@ -84,19 +95,9 @@ MyoMaster::MyoMaster(int argc, char *argv[]) {
         powerLinkThread = new std::thread(&MyoMaster::mainLoop, this);
         powerLinkThread->detach();
 #else
-    mainLoop();
+        mainLoop();
 #endif
     }
-}
-
-MyoMaster::~MyoMaster() {
-    fExit = true;
-#ifdef RUN_IN_THREAD
-    if(powerLinkThread->joinable())
-        powerLinkThread->join();
-#endif
-    shutdownPowerlink();
-    system_exit();
 }
 
 void MyoMaster::mainLoop() {
@@ -254,7 +255,7 @@ int MyoMaster::getOptions(int argc_p, char *const argv_p[], tOptions *pOpts_p) {
     int opt;
 
     /* setup default parameters */
-    strncpy(pOpts_p->cdcFile, "mnobd.cdc", 256);
+    strncpy(pOpts_p->cdcFile, "src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
     strncpy(pOpts_p->devName, "\0", 128);
     pOpts_p->pLogFile = NULL;
     pOpts_p->logFormat = kEventlogFormatReadable;
@@ -462,22 +463,24 @@ tOplkError MyoMaster::processSync() {
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_13);
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_14);
     }
-    // setpoints for 16 motors
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_1 = setPoints[0];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_2 = setPoints[1];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_3 = setPoints[2];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_4 = setPoints[3];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_5 = setPoints[4];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_6 = setPoints[5];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_7 = setPoints[6];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_8 = setPoints[7];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_9 = setPoints[8];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_10 = setPoints[9];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_11 = setPoints[10];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_12 = setPoints[11];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_13 = setPoints[12];
-    pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_14 = setPoints[13];
-
+    {
+        std::lock_guard<std::mutex> lock(mux);
+        // setpoints for 16 motors
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_1 = setPoints[0];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_2 = setPoints[1];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_3 = setPoints[2];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_4 = setPoints[3];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_5 = setPoints[4];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_6 = setPoints[5];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_7 = setPoints[6];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_8 = setPoints[7];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_9 = setPoints[8];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_10 = setPoints[9];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_11 = setPoints[10];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_12 = setPoints[11];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_13 = setPoints[12];
+        pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_14 = setPoints[13];
+    }
     ret = oplk_exchangeProcessImageIn();
 
 //    communication::MotorConfig msg;

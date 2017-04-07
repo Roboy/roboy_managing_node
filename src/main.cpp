@@ -1,11 +1,8 @@
-#include "interface.hpp"
-
-using namespace ncursesInterface;
+#include "roboy_managing_node/myoMaster.hpp"
 
 int main(int argc, char *argv[]) {
 
-//    Interface interface(argc,argv);
-
     MyoMaster myoMaster(argc,argv);
+    myoMaster.initialize();
 }
 

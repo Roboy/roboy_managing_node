@@ -9,7 +9,7 @@ IF (POLICY CMP0043)
 ENDIF()
 
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/options.cmake)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g ")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
 OPTION(CFG_IP_STACK "Is an IP stack available (support of SDO/UDP)" OFF)
@@ -25,21 +25,18 @@ FIND_OPLK_LIBRARY("mn")         # Find suitable openPOWERLINK library
 # ros
 find_package(catkin REQUIRED COMPONENTS communication roscpp std_msgs)
 include_directories(${catkin_INCLUDE_DIRS} )
-catkin_package( CATKIN_DEPENDS message_runtime)
+catkin_package( CATKIN_DEPENDS message_runtime INCLUDE_DIRS include)
 
 # protobuf
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
-message(STATUS ${PROTOBUF_INCLUDE_DIR})
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/myoFPGA.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/protobuf/myoFPGA.proto)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Set generic sources and include directories for this demo
 SET(SOURCES
-        src/main.cpp
         src/myoMaster.cpp
         src/UDPSocket.cpp
-        src/interface.cpp
         ${COMMON_SOURCE_DIR}/obdcreate/obdcreate.c
         ${COMMON_SOURCE_DIR}/eventlog/eventlog.c
         ${COMMON_SOURCE_DIR}/eventlog/eventlogstring.c
@@ -53,7 +50,7 @@ SET(SOURCES
 
 INCLUDE_DIRECTORIES(
         include/
-        ${CMAKE_CURRENT_SOURCE_DIR}/../powerlink/output
+        ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/powerlink/output
         ${OPLK_BASE_DIR}/apps/common/objdicts/CiA302-4_MN
         ${OPLK_BASE_DIR}/stack/proj/linux/liboplkmndrv-pcap
     )
@@ -120,18 +117,23 @@ ENDIF()
 # Application
 #==============================================================================
 
-ADD_EXECUTABLE(roboy_managing_node ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/../powerlink/output/mnobd.cdc ${PROTO_SRCS} ${PROTO_HDRS})
+ADD_LIBRARY(roboy_managing_node STATIC ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/powerlink/output/mnobd.cdc
+        ${PROTO_SRCS} ${PROTO_HDRS})
 SET_PROPERTY(TARGET roboy_managing_node
              PROPERTY COMPILE_DEFINITIONS_DEBUG DEBUG;DEF_DEBUG_LVL=${CFG_DEBUG_LVL})
+
+add_executable(test_managing_node src/main.cpp)
 
 ################################################################################
 # Libraries to link
 OPLK_LINK_LIBRARIES(roboy_managing_node)
 TARGET_LINK_LIBRARIES(roboy_managing_node -lpcap -lpthread -lrt -lncurses ${PROTOBUF_LIBRARY} ${catkin_LIBRARIES})
 
+TARGET_LINK_LIBRARIES(test_managing_node roboy_managing_node)
+
 #==============================================================================
 # Installation
 #==============================================================================
 
-INSTALL(TARGETS roboy_managing_node RUNTIME DESTINATION ${PROJECT_NAME})
+#INSTALL(TARGETS roboy_managing_node RUNTIME DESTINATION ${PROJECT_NAME})
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/mnobd.cdc DESTINATION ${PROJECT_NAME})
