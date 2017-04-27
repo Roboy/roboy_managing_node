@@ -42,6 +42,9 @@
 #include <communication/MotorConfig.h>
 #include <communication/MotorStatus.h>
 #include <communication/MotorCommand.h>
+#include <communication/MotorRecord.h>
+#include <communication/MotorRecordConfig.h>
+#include <communication/MotorTrajectoryControl.h>
 #include "/home/roboy/workspace/myoFPGA/myoFPGA/build/roboy_managing_node/myoFPGA.pb.h"
 #include <mutex>
 
@@ -214,7 +217,7 @@ private:
     std::thread *powerLinkThread;
     static bool fExit;
     ros::NodeHandlePtr nh;
-    static ros::Publisher motorConfig;
+    ros::Publisher motorConfig;
     ros::Subscriber motorStatus, motorCommand;
     static tOptions opts;
 public:

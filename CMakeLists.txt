@@ -134,6 +134,14 @@ TARGET_LINK_LIBRARIES(test_managing_node roboy_managing_node)
 #==============================================================================
 # Installation
 #==============================================================================
+install(TARGETS
+        test_managing_node
+        roboy_managing_node
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
 
-#INSTALL(TARGETS roboy_managing_node RUNTIME DESTINATION ${PROJECT_NAME})
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/mnobd.cdc DESTINATION ${PROJECT_NAME})
+install(FILES
+        package.xml
+        ${CMAKE_CURRENT_BINARY_DIR}/mnobd.cdc
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        )

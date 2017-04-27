@@ -9,7 +9,6 @@ bool MyoMaster::updateControllerConfig = false;
 int32_t MyoMaster::setPoints[14];
 control_Parameters_t MyoMaster::MotorConfig;
 bool MyoMaster::fExit = false;
-ros::Publisher MyoMaster::motorConfig;
 tOptions MyoMaster::opts;
 mutex MyoMaster::mux;
 
@@ -445,10 +444,10 @@ tOplkError MyoMaster::processSync() {
     if (ret != kErrorOk)
         return ret;
 
-    static int iter = 1;
-    if ((iter++) % 50 == 0) {
-        printf("\n############## myoFPGA ###################\n");
-        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_1);
+//    static int iter = 1;
+//    if ((iter++) % 50 == 0) {
+//        printf("\n############## myoFPGA ###################\n");
+//        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_1);
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_2);
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_3);
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_4);
@@ -462,7 +461,7 @@ tOplkError MyoMaster::processSync() {
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_12);
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_13);
 //        printf("springDisplacement: %d\n", pProcessImageOut_l->CN1_MotorStatus_springDisplacement_I16_14);
-    }
+//    }
     {
         std::lock_guard<std::mutex> lock(mux);
         // setpoints for 16 motors
@@ -482,11 +481,6 @@ tOplkError MyoMaster::processSync() {
         pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_14 = setPoints[13];
     }
     ret = oplk_exchangeProcessImageIn();
-
-//    communication::MotorConfig msg;
-//    motorConfig.publish(msg);
-//
-//    ros::spinOnce();
 
     MyoFPGAProtobuf::MotorCommand msg;
     if(motorCommandSocket->receiveMessage<MyoFPGAProtobuf::MotorCommand>(msg)){
