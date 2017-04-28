@@ -142,6 +142,6 @@ install(TARGETS
 
 install(FILES
         package.xml
-        ${CMAKE_CURRENT_BINARY_DIR}/mnobd.cdc
+        ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/powerlink/output/mnobd.cdc
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         )
