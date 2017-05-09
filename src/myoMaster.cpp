@@ -1,3 +1,4 @@
+#include <common_utilities/CommonDefinitions.h>
 #include "roboy_managing_node/myoMaster.hpp"
 
 static BOOL* pfGsOff_l;
@@ -7,7 +8,7 @@ const PI_OUT* MyoMaster::pProcessImageOut_l;
 UDPSocket *MyoMaster::motorCommandSocket;
 bool MyoMaster::updateControllerConfig = false;
 int32_t MyoMaster::setPoints[14];
-control_Parameters_t MyoMaster::MotorConfig;
+control_Parameters_t MyoMaster::MotorConfig[NUMBER_OF_CONTROL_MODES][NUMBER_OF_MOTORS_PER_FPGA];
 bool MyoMaster::fExit = false;
 tOptions MyoMaster::opts;
 mutex MyoMaster::mux;
@@ -15,7 +16,6 @@ mutex MyoMaster::mux;
 MyoMaster::MyoMaster(int argc, char *argv[]) {
     if (!ros::isInitialized()) {
         ros::init(argc, argv, "roboy_managing_node",
-                  ros::init_options::NoSigintHandler |
                           ros::init_options::AnonymousName |
                           ros::init_options::NoRosout);
     }
@@ -23,7 +23,7 @@ MyoMaster::MyoMaster(int argc, char *argv[]) {
 //
     motorStatus = nh->subscribe("/roboy/MotorStatus", 1, &MyoMaster::MotorStatus, this);
     motorCommand = nh->subscribe("/roboy/MotorCommand", 1, &MyoMaster::MotorCommand, this);
-    motorConfig = nh->advertise<communication::MotorConfig>("/roboy/MotorConfig", 1);
+    motorConfig = nh->advertise<common_utilities::MotorConfig>("/roboy/MotorConfig", 1);
 
     if (getOptions(argc, argv, &opts) < 0)
         ROS_WARN("invalid command line params");
@@ -163,18 +163,18 @@ void MyoMaster::mainLoop() {
 
         if (system_getTermSignalState() == TRUE) {
             fExit = true;
-            ROS_WARN("Received termination signal, exiting...");
             eventlog_printMessage(kEventlogLevelInfo,
                                   kEventlogCategoryControl,
                                   "Received termination signal, exiting...");
+            return;
         }
 
         if (oplk_checkKernelStack() == FALSE) {
             fExit = true;
-            ROS_WARN("Kernel stack has gone! Exiting...\n");
             eventlog_printMessage(kEventlogLevelFatal,
                                   kEventlogCategoryControl,
                                   "Kernel stack has gone! Exiting...");
+            return;
         }
 
 #if (defined(CONFIG_USE_SYNCTHREAD) || \
@@ -186,12 +186,80 @@ void MyoMaster::mainLoop() {
     }
 }
 
-void MyoMaster::changeControl(int motor, int mode){
-    MotorConfig.control_mode = mode;
+bool MyoMaster::changeControl(int motor, int mode){
+    if(mode>=POSITION && mode <=DISPLACEMENT) {
+        common_utilities::MotorConfig msg;
+        msg.id = 0;
+        msg.motors.push_back(motor);
+        msg.control_mode.push_back(mode);
+        msg.outputPosMax.push_back(MotorConfig[mode][motor].outputPosMax);
+        msg.outputNegMax.push_back(MotorConfig[mode][motor].outputNegMax);
+        msg.spPosMax.push_back(MotorConfig[mode][motor].spPosMax);
+        msg.spNegMax.push_back(MotorConfig[mode][motor].spNegMax);
+        msg.Kp.push_back(MotorConfig[mode][motor].Kp);
+        msg.Ki.push_back(MotorConfig[mode][motor].Ki);
+        msg.Kd.push_back(MotorConfig[mode][motor].Kd);
+        msg.forwardGain.push_back(MotorConfig[mode][motor].forwardGain);
+        msg.deadBand.push_back(MotorConfig[mode][motor].deadBand);
+        msg.IntegralPosMax.push_back(MotorConfig[mode][motor].IntegralPosMax);
+        msg.IntegralNegMax.push_back(MotorConfig[mode][motor].IntegralNegMax);
+        motorConfig.publish(msg);
+        return true;
+    }else{
+        ROS_ERROR("invalid controlmode %d requested ", mode);
+        return false;
+    }
 }
 
-void MyoMaster::changeControl(int mode){
-//    MotorConfig.control_mode,16,mode);
+bool MyoMaster::changeControl(int mode){
+    if(mode>=POSITION && mode <=DISPLACEMENT) {
+        common_utilities::MotorConfig msg;
+        msg.id = 0;
+        for(uint motor=0;motor<NUMBER_OF_MOTORS_PER_FPGA;motor++) {
+            msg.motors.push_back(motor);
+            msg.control_mode.push_back(mode);
+            msg.outputPosMax.push_back(MotorConfig[mode][motor].outputPosMax);
+            msg.outputNegMax.push_back(MotorConfig[mode][motor].outputNegMax);
+            msg.spPosMax.push_back(MotorConfig[mode][motor].spPosMax);
+            msg.spNegMax.push_back(MotorConfig[mode][motor].spNegMax);
+            msg.Kp.push_back(MotorConfig[mode][motor].Kp);
+            msg.Ki.push_back(MotorConfig[mode][motor].Ki);
+            msg.Kd.push_back(MotorConfig[mode][motor].Kd);
+            msg.forwardGain.push_back(MotorConfig[mode][motor].forwardGain);
+            msg.deadBand.push_back(MotorConfig[mode][motor].deadBand);
+            msg.IntegralPosMax.push_back(MotorConfig[mode][motor].IntegralPosMax);
+            msg.IntegralNegMax.push_back(MotorConfig[mode][motor].IntegralNegMax);
+        }
+        motorConfig.publish(msg);
+        return true;
+    }else{
+        ROS_ERROR("invalid controlmode %d requested ", mode);
+        return false;
+    }
+}
+
+bool MyoMaster::changeControl(int motor, control_Parameters_t &params){
+    MotorConfig[params.control_mode][motor] = params;
+    return changeControl(motor, params.control_mode);
+}
+
+bool MyoMaster::changeControl(vector<int> &motors, vector<control_Parameters_t> &params){
+    uint i = 0;
+    for(auto motor:motors){
+        MotorConfig[params[i].control_mode][motor] = params[i];
+        i++;
+        if(!changeControl(motor, params[i].control_mode))
+            return false;
+    }
+    return true;
+}
+
+bool MyoMaster::changeControl(control_Parameters_t &params){
+    for(uint motor = 0; motor<NUMBER_OF_MOTORS_PER_FPGA; motor++){
+        if(!changeControl(motor, params))
+            return false;
+    }
+    return true;
 }
 
 void MyoMaster::changeSetPoint(int motor, int setPoint){
@@ -206,11 +274,11 @@ void MyoMaster::sendControllerConfig(){
     updateControllerConfig = true;
 }
 
-void MyoMaster::MotorStatus(const communication::MotorStatus::ConstPtr &msg){
+void MyoMaster::MotorStatus(const common_utilities::MotorStatus::ConstPtr &msg){
     ROS_INFO_THROTTLE(5, "receiving motor status");
 }
 
-void MyoMaster::MotorCommand(const communication::MotorCommand::ConstPtr &msg){
+void MyoMaster::MotorCommand(const common_utilities::MotorCommand::ConstPtr &msg){
     uint i = 0;
     for(auto motor:msg->motors){
         setPoints[motor] = msg->setPoints[i++];

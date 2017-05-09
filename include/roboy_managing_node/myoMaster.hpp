@@ -39,12 +39,13 @@
 #include <thread>
 #include <sys/stat.h>
 #include <ros/ros.h>
-#include <communication/MotorConfig.h>
-#include <communication/MotorStatus.h>
-#include <communication/MotorCommand.h>
-#include <communication/MotorRecord.h>
-#include <communication/MotorRecordConfig.h>
-#include <communication/MotorTrajectoryControl.h>
+#include <common_utilities/CommonDefinitions.h>
+#include <common_utilities/MotorConfig.h>
+#include <common_utilities/MotorStatus.h>
+#include <common_utilities/MotorCommand.h>
+#include <common_utilities/MotorRecord.h>
+#include <common_utilities/MotorRecordConfig.h>
+#include <common_utilities/MotorTrajectoryControl.h>
 #include "/home/roboy/workspace/myoFPGA/myoFPGA/build/roboy_managing_node/myoFPGA.pb.h"
 #include <mutex>
 
@@ -74,20 +75,40 @@ public:
      * Changes the control mode of a motor
      * @param motor for this motor
      * @param mode POSITION, VECLOCITY, DISPLACEMENT
-     * @return
+     * @return success
      */
-    void changeControl(int motor, int mode);
+    bool changeControl(int motor, int mode);
     /**
      * Changes the control mode of all motors
      * @param mode POSITION, VECLOCITY, DISPLACEMENT
-     * @return
+     * @return success
      */
-    void changeControl(int mode);
+    bool changeControl(int mode);
+    /**
+     * Changes the control parameters of a motor
+     * @param motor for this motor
+     * @param params control parameters for this motor
+     * @return success
+     */
+    bool changeControl(int motor, control_Parameters_t &params);
+    /**
+     * Changes the control parameters of the respective motors
+     * @param motors the motor ids
+     * @param params the respective parameters
+     * @return success
+     */
+    bool changeControl(vector<int> &motors, vector<control_Parameters_t> &params);
+    /**
+     * Changes the control parameters of ALL motors
+     * @param params control parameters for ALL motors
+     * @return success
+     */
+    bool changeControl(control_Parameters_t &params);
     /**
      * Changes the setPoint of a motor
      * @param motor for this motor
      * @param setPoint to this setpoint
-     * @return
+     * @return success
      */
     void changeSetPoint(int motor, int setPoint);
     /**
@@ -105,12 +126,12 @@ private:
      * This is the callback for motor status
      * @param msg status message
      */
-    void MotorStatus(const communication::MotorStatus::ConstPtr &msg);
+    void MotorStatus(const common_utilities::MotorStatus::ConstPtr &msg);
     /**
      * This is the callback for motor commands
      * @param msg motor command message
      */
-    void MotorCommand(const communication::MotorCommand::ConstPtr &msg);
+    void MotorCommand(const common_utilities::MotorCommand::ConstPtr &msg);
     /**
      * This initializes the process image for openPowerLink
      * @return errorCode
@@ -212,7 +233,7 @@ private:
     static bool updateControllerConfig;
     BOOL         fGsOff_l;
     static UDPSocket *motorCommandSocket;
-    static control_Parameters_t MotorConfig;
+    static control_Parameters_t MotorConfig[NUMBER_OF_CONTROL_MODES][NUMBER_OF_MOTORS_PER_FPGA];
     static int32_t setPoints[14];
     std::thread *powerLinkThread;
     static bool fExit;

@@ -23,9 +23,9 @@ SET(OBJDICT CiA302-4_MN)        # Set object dictionary to use
 FIND_OPLK_LIBRARY("mn")         # Find suitable openPOWERLINK library
 
 # ros
-find_package(catkin REQUIRED COMPONENTS communication roscpp std_msgs)
+find_package(catkin REQUIRED COMPONENTS common_utilities roscpp std_msgs controller_manager )
 include_directories(${catkin_INCLUDE_DIRS} )
-catkin_package( CATKIN_DEPENDS message_runtime INCLUDE_DIRS include)
+catkin_package( CATKIN_DEPENDS message_runtime common_utilities INCLUDE_DIRS include)
 
 # protobuf
 find_package(Protobuf REQUIRED)
@@ -122,22 +122,24 @@ ADD_LIBRARY(roboy_managing_node STATIC ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/..
 SET_PROPERTY(TARGET roboy_managing_node
              PROPERTY COMPILE_DEFINITIONS_DEBUG DEBUG;DEF_DEBUG_LVL=${CFG_DEBUG_LVL})
 
-add_executable(test_managing_node src/main.cpp)
+add_executable(roboy src/main.cpp src/roboy.cpp)
+add_dependencies(roboy common_utilities_gencpp) 
+target_link_libraries(roboy ${catkin_LIBRARIES} roboy_managing_node)
 
-################################################################################
-# Libraries to link
 OPLK_LINK_LIBRARIES(roboy_managing_node)
 TARGET_LINK_LIBRARIES(roboy_managing_node -lpcap -lpthread -lrt -lncurses ${PROTOBUF_LIBRARY} ${catkin_LIBRARIES})
-
-TARGET_LINK_LIBRARIES(test_managing_node roboy_managing_node)
 
 #==============================================================================
 # Installation
 #==============================================================================
 install(TARGETS
-        test_managing_node
-        roboy_managing_node
+        roboy
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
+
+install(TARGETS
+        roboy_managing_node
+        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         )
 
 install(FILES
