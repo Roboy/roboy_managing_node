@@ -3,12 +3,12 @@
 #include "roboy_managing_node/roboy.hpp"
 #include "roboy_managing_node/myoMaster.hpp"
 #include "common_utilities/CommonDefinitions.h"
-#include "common_utilities/Initialize.h"
-#include "common_utilities/EmergencyStop.h"
-#include "common_utilities/Record.h"
-#include <common_utilities/Steer.h>
-#include "common_utilities/Trajectory.h"
-#include "common_utilities/RoboyState.h"
+#include "roboy_communication_middleware/Initialize.h"
+#include "roboy_communication_middleware/EmergencyStop.h"
+#include "roboy_communication_middleware/Record.h"
+#include <roboy_communication_middleware/Steer.h>
+#include "roboy_communication_middleware/Trajectory.h"
+#include "roboy_communication_middleware/RoboyState.h"
 
 // ros
 #include <ros/ros.h>
@@ -56,8 +56,8 @@ public:
     /**
      * This function initialises the requested motors
      */
-    bool initializeControllers(common_utilities::Initialize::Request &req,
-                               common_utilities::Initialize::Response &res);
+    bool initializeControllers(roboy_communication_middleware::Initialize::Request &req,
+                               roboy_communication_middleware::Initialize::Response &res);
     /**
 	 * Read from hardware
 	 */
@@ -112,13 +112,13 @@ private:
      * @param req vector<int8> containing requested motor ids
      * @param res vector<ControllerStates> cf. CommonDefinitions.h
      */
-    bool record(common_utilities::Record::Request &req,
-                common_utilities::Record::Response &res);
+    bool record(roboy_communication_middleware::Record::Request &req,
+                roboy_communication_middleware::Record::Response &res);
 
     /**
      * SUBSCRIBER enables pause/resume and stop recording
      */
-    void steer_record(const common_utilities::Steer::ConstPtr &msg);
+    void steer_record(const roboy_communication_middleware::Steer::ConstPtr &msg);
 
     ros::NodeHandle nh;
     double *cmd;
@@ -141,7 +141,7 @@ private:
     ros::Publisher recordResult_pub;
 
     MyoMaster *myoMaster;
-    common_utilities::RoboyState roboyStateMsg;
+    roboy_communication_middleware::RoboyState roboyStateMsg;
 
     vector<ros::Publisher> displacement_pub;
 

@@ -21,8 +21,8 @@ Roboy::~Roboy()
 {
 }
 
-bool Roboy::initializeControllers( common_utilities::Initialize::Request &req,
-								   common_utilities::Initialize::Response &res )
+bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::Request &req,
+								   roboy_communication_middleware::Initialize::Response &res )
 {
     initialized = false;
 
@@ -233,8 +233,8 @@ ActionState Roboy::NextState(ActionState s)
 	return newstate;
 }
 
-bool Roboy::record( common_utilities::Record::Request &req,
-                    common_utilities::Record::Response &res) {
+bool Roboy::record( roboy_communication_middleware::Record::Request &req,
+					roboy_communication_middleware::Record::Response &res) {
 //	currentState = Recording;
 //	std::vector<std::vector<float>> trajectories;
 //	recording = PLAY_TRAJECTORY;
@@ -255,7 +255,7 @@ bool Roboy::record( common_utilities::Record::Request &req,
 //    return true;
 }
 
-void Roboy::steer_record(const common_utilities::Steer::ConstPtr& msg){
+void Roboy::steer_record(const roboy_communication_middleware::Steer::ConstPtr& msg){
 	switch (msg->steeringCommand){
 		case STOP_TRAJECTORY:
 			recording = STOP_TRAJECTORY;

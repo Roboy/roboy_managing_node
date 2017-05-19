@@ -1,4 +1,3 @@
-#include <common_utilities/CommonDefinitions.h>
 #include "roboy_managing_node/myoMaster.hpp"
 
 static BOOL* pfGsOff_l;
@@ -23,7 +22,7 @@ MyoMaster::MyoMaster(int argc, char *argv[]) {
 //
     motorStatus = nh->subscribe("/roboy/MotorStatus", 1, &MyoMaster::MotorStatus, this);
     motorCommand = nh->subscribe("/roboy/MotorCommand", 1, &MyoMaster::MotorCommand, this);
-    motorConfig = nh->advertise<common_utilities::MotorConfig>("/roboy/MotorConfig", 1);
+    motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/MotorConfig", 1);
 
     if (getOptions(argc, argv, &opts) < 0)
         ROS_WARN("invalid command line params");
@@ -188,7 +187,7 @@ void MyoMaster::mainLoop() {
 
 bool MyoMaster::changeControl(int motor, int mode){
     if(mode>=POSITION && mode <=DISPLACEMENT) {
-        common_utilities::MotorConfig msg;
+        roboy_communication_middleware::MotorConfig msg;
         msg.id = 0;
         msg.motors.push_back(motor);
         msg.control_mode.push_back(mode);
@@ -213,7 +212,7 @@ bool MyoMaster::changeControl(int motor, int mode){
 
 bool MyoMaster::changeControl(int mode){
     if(mode>=POSITION && mode <=DISPLACEMENT) {
-        common_utilities::MotorConfig msg;
+        roboy_communication_middleware::MotorConfig msg;
         msg.id = 0;
         for(uint motor=0;motor<NUMBER_OF_MOTORS_PER_FPGA;motor++) {
             msg.motors.push_back(motor);
@@ -274,11 +273,11 @@ void MyoMaster::sendControllerConfig(){
     updateControllerConfig = true;
 }
 
-void MyoMaster::MotorStatus(const common_utilities::MotorStatus::ConstPtr &msg){
+void MyoMaster::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
     ROS_INFO_THROTTLE(5, "receiving motor status");
 }
 
-void MyoMaster::MotorCommand(const common_utilities::MotorCommand::ConstPtr &msg){
+void MyoMaster::MotorCommand(const roboy_communication_middleware::MotorCommand::ConstPtr &msg){
     uint i = 0;
     for(auto motor:msg->motors){
         setPoints[motor] = msg->setPoints[i++];
