@@ -4,7 +4,6 @@ static BOOL* pfGsOff_l;
 
 PI_IN* MyoMaster::pProcessImageIn_l;
 const PI_OUT* MyoMaster::pProcessImageOut_l;
-UDPSocket *MyoMaster::motorCommandSocket;
 bool MyoMaster::updateControllerConfig = false;
 int32_t MyoMaster::setPoints[14];
 control_Parameters_t MyoMaster::MotorConfig[NUMBER_OF_CONTROL_MODES][NUMBER_OF_MOTORS_PER_FPGA];
@@ -81,12 +80,6 @@ void MyoMaster::initialize(){
     ret = initProcessImage();
     if (ret != kErrorOk)
         powerlink_initialized = false;
-
-    motorCommandSocket = new UDPSocket("192.168.0.100", 8001);
-//    while(true){
-//        motorCommandSocket->numbytes = 1;
-//        motorCommandSocket->sendUDPToClient();
-//    }
 
     if(powerlink_initialized) {
 #ifdef RUN_IN_THREAD
@@ -548,14 +541,6 @@ tOplkError MyoMaster::processSync() {
         pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_14 = setPoints[13];
     }
     ret = oplk_exchangeProcessImageIn();
-
-    MyoFPGAProtobuf::MotorCommand msg;
-    if(motorCommandSocket->receiveMessage<MyoFPGAProtobuf::MotorCommand>(msg)){
-        ROS_INFO("received motor command");
-        for(uint motor = 0; motor<msg.motor_size(); motor++){
-            setPoints[msg.motor(motor)] = msg.setpoint(motor);
-        }
-    }
 
     return ret;
 }

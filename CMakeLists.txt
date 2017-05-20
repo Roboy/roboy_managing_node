@@ -23,20 +23,13 @@ SET(OBJDICT CiA302-4_MN)        # Set object dictionary to use
 FIND_OPLK_LIBRARY("mn")         # Find suitable openPOWERLINK library
 
 # ros
-find_package(catkin REQUIRED COMPONENTS roboy_communication_middleware roscpp std_msgs controller_manager )
+find_package(catkin REQUIRED COMPONENTS roboy_communication_middleware roscpp std_msgs controller_manager common_utilities)
+catkin_package( CATKIN_DEPENDS message_runtime roboy_communication_middleware common_utilities INCLUDE_DIRS include)
 include_directories(${catkin_INCLUDE_DIRS} )
-catkin_package( CATKIN_DEPENDS message_runtime roboy_communication_middleware INCLUDE_DIRS include)
-
-# protobuf
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIR})
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/protobuf/myoFPGA.proto)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Set generic sources and include directories for this demo
 SET(SOURCES
         src/myoMaster.cpp
-        src/UDPSocket.cpp
         ${COMMON_SOURCE_DIR}/obdcreate/obdcreate.c
         ${COMMON_SOURCE_DIR}/eventlog/eventlog.c
         ${COMMON_SOURCE_DIR}/eventlog/eventlogstring.c
@@ -117,13 +110,13 @@ ENDIF()
 # Application
 #==============================================================================
 
-ADD_LIBRARY(roboy_managing_node STATIC ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/powerlink/output/mnobd.cdc
-        ${PROTO_SRCS} ${PROTO_HDRS})
+ADD_LIBRARY(roboy_managing_node STATIC ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_powerlink/powerlink/output/mnobd.cdc)
+add_dependencies(roboy_managing_node roboy_communication_middleware_gencpp)
 SET_PROPERTY(TARGET roboy_managing_node
              PROPERTY COMPILE_DEFINITIONS_DEBUG DEBUG;DEF_DEBUG_LVL=${CFG_DEBUG_LVL})
 
 add_executable(roboy src/main.cpp src/roboy.cpp)
-add_dependencies(roboy common_utilities_gencpp) 
+add_dependencies(roboy roboy_communication_middleware_gencpp) 
 target_link_libraries(roboy ${catkin_LIBRARIES} roboy_managing_node)
 
 OPLK_LINK_LIBRARIES(roboy_managing_node)

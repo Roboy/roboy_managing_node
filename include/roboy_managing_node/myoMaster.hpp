@@ -31,23 +31,22 @@
 
 #define RUN_IN_THREAD
 
-#include "UDPSocket.hpp"
-
 #undef min
 #undef max
 
 #include <thread>
 #include <sys/stat.h>
 #include <ros/ros.h>
-#include <common_utilities/CommonDefinitions.h>
 #include <roboy_communication_middleware/MotorConfig.h>
 #include <roboy_communication_middleware/MotorStatus.h>
 #include <roboy_communication_middleware/MotorCommand.h>
 #include <roboy_communication_middleware/MotorRecord.h>
 #include <roboy_communication_middleware/MotorRecordConfig.h>
 #include <roboy_communication_middleware/MotorTrajectoryControl.h>
-#include "/home/roboy/workspace/myoFPGA/myoFPGA/build/roboy_managing_node/myoFPGA.pb.h"
+#include <common_utilities/CommonDefinitions.h>
 #include <mutex>
+
+using namespace std;
 
 typedef struct
 {
@@ -232,7 +231,6 @@ private:
     static const PI_OUT*    pProcessImageOut_l;
     static bool updateControllerConfig;
     BOOL         fGsOff_l;
-    static UDPSocket *motorCommandSocket;
     static control_Parameters_t MotorConfig[NUMBER_OF_CONTROL_MODES][NUMBER_OF_MOTORS_PER_FPGA];
     static int32_t setPoints[14];
     std::thread *powerLinkThread;
