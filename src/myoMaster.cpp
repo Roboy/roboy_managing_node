@@ -23,7 +23,7 @@ MyoMaster::MyoMaster(int argc, char *argv[]) {
 //
     motorStatus = nh->subscribe("/roboy/MotorStatus", 1, &MyoMaster::MotorStatus, this);
     motorCommand = nh->subscribe("/roboy/MotorCommand", 1, &MyoMaster::MotorCommand, this);
-    motorConfig = nh->advertise<communication::MotorConfig>("/roboy/MotorConfig", 1);
+    motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/MotorConfig", 1);
 
     if (getOptions(argc, argv, &opts) < 0)
         ROS_WARN("invalid command line params");
@@ -206,11 +206,11 @@ void MyoMaster::sendControllerConfig(){
     updateControllerConfig = true;
 }
 
-void MyoMaster::MotorStatus(const communication::MotorStatus::ConstPtr &msg){
+void MyoMaster::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
     ROS_INFO_THROTTLE(5, "receiving motor status");
 }
 
-void MyoMaster::MotorCommand(const communication::MotorCommand::ConstPtr &msg){
+void MyoMaster::MotorCommand(const roboy_communication_middleware::MotorCommand::ConstPtr &msg){
     uint i = 0;
     for(auto motor:msg->motors){
         setPoints[motor] = msg->setPoints[i++];
@@ -481,14 +481,6 @@ tOplkError MyoMaster::processSync() {
         pProcessImageIn_l->CN1_MotorCommand_setPoint_I32_14 = setPoints[13];
     }
     ret = oplk_exchangeProcessImageIn();
-
-    MyoFPGAProtobuf::MotorCommand msg;
-    if(motorCommandSocket->receiveMessage<MyoFPGAProtobuf::MotorCommand>(msg)){
-        ROS_INFO("received motor command");
-        for(uint motor = 0; motor<msg.motor_size(); motor++){
-            setPoints[msg.motor(motor)] = msg.setpoint(motor);
-        }
-    }
 
     return ret;
 }

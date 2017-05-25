@@ -39,13 +39,12 @@
 #include <thread>
 #include <sys/stat.h>
 #include <ros/ros.h>
-#include <communication/MotorConfig.h>
-#include <communication/MotorStatus.h>
-#include <communication/MotorCommand.h>
-#include <communication/MotorRecord.h>
-#include <communication/MotorRecordConfig.h>
-#include <communication/MotorTrajectoryControl.h>
-#include "/home/roboy/workspace/myoFPGA/myoFPGA/build/roboy_managing_node/myoFPGA.pb.h"
+#include <roboy_communication_middleware/MotorConfig.h>
+#include <roboy_communication_middleware/MotorStatus.h>
+#include <roboy_communication_middleware/MotorCommand.h>
+#include <roboy_communication_middleware/MotorRecord.h>
+#include <roboy_communication_middleware/MotorRecordConfig.h>
+#include <roboy_communication_middleware/MotorTrajectoryControl.h>
 #include <mutex>
 
 typedef struct
@@ -105,12 +104,12 @@ private:
      * This is the callback for motor status
      * @param msg status message
      */
-    void MotorStatus(const communication::MotorStatus::ConstPtr &msg);
+    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
     /**
      * This is the callback for motor commands
      * @param msg motor command message
      */
-    void MotorCommand(const communication::MotorCommand::ConstPtr &msg);
+    void MotorCommand(const roboy_communication_middleware::MotorCommand::ConstPtr &msg);
     /**
      * This initializes the process image for openPowerLink
      * @return errorCode

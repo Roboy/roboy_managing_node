@@ -23,9 +23,9 @@ SET(OBJDICT CiA302-4_MN)        # Set object dictionary to use
 FIND_OPLK_LIBRARY("mn")         # Find suitable openPOWERLINK library
 
 # ros
-find_package(catkin REQUIRED COMPONENTS communication roscpp std_msgs)
+find_package(catkin REQUIRED COMPONENTS roboy_communication_middleware roscpp std_msgs)
 include_directories(${catkin_INCLUDE_DIRS} )
-catkin_package( CATKIN_DEPENDS message_runtime INCLUDE_DIRS include)
+catkin_package( CATKIN_DEPENDS message_runtime roboy_communication_middleware INCLUDE_DIRS include)
 
 # protobuf
 find_package(Protobuf REQUIRED)
