@@ -40,7 +40,7 @@ bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::R
 
 		switch((uint)req.controlmode[i]){
 			case 0: {
-				ROS_INFO("%s position controller", resource, ganglion, motor);
+				ROS_INFO("%s position controller", resource);
 				// connect and register the joint position interface
 				hardware_interface::JointHandle pos_handle(jnt_state_interface.getHandle(resource), &cmd[req.idList[i]]);
 				jnt_pos_interface.registerHandle(pos_handle);
@@ -48,7 +48,7 @@ bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::R
 				break;
 			}
 			case 1: {
-				ROS_INFO("%s velocity controller", resource, ganglion, motor);
+				ROS_INFO("%s velocity controller", resource);
 				// connect and register the joint position interface
 				hardware_interface::JointHandle vel_handle(jnt_state_interface.getHandle(resource), &cmd[req.idList[i]]);
 				jnt_vel_interface.registerHandle(vel_handle);
@@ -56,7 +56,7 @@ bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::R
 				break;
 			}
 			case 2: {
-				ROS_INFO("%s force controller", resource, ganglion, motor);
+				ROS_INFO("%s force controller", resource);
 				// connect and register the joint position interface
 				hardware_interface::JointHandle eff_handle(jnt_state_interface.getHandle(resource), &cmd[req.idList[i]]);
 				jnt_eff_interface.registerHandle(eff_handle);
