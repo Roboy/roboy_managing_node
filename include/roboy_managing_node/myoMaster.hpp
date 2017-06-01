@@ -60,16 +60,20 @@ typedef struct
 
 class MyoMaster{
 public:
-    MyoMaster(int argc, char* argv[]);
+    MyoMaster();
     ~MyoMaster();
     /**
      * Initilializes openpowerlink
      */
-    void initialize();
+    void initialize(int argc, char *argv[]);
     /**
 	 * This is the main loop, receiving commands and sending motor status via powerlink
 	 */
     void mainLoop();
+    /**
+     * This starts the main loop
+     */
+    void start();
     /**
      * Changes the control mode of a motor
      * @param motor for this motor
@@ -159,11 +163,13 @@ private:
                              const char* cdcFileName_p,
                              const char* devName_p,
                              const UINT8* macAddr_p);
+public:
     /**
      * The function implements the synchronous data handler.
      * @return The function returns a tOplkError error code.
     */
     static tOplkError processSync();
+private:
     /** Shuts down powerLink */
     void shutdownPowerlink();
     /**
@@ -234,11 +240,12 @@ private:
     static control_Parameters_t MotorConfig[NUMBER_OF_CONTROL_MODES][NUMBER_OF_MOTORS_PER_FPGA];
     static int32_t setPoints[14];
     std::thread *powerLinkThread;
-    static bool fExit;
     ros::NodeHandlePtr nh;
     ros::Publisher motorConfig;
     ros::Subscriber motorStatus, motorCommand;
     static tOptions opts;
+    bool powerlink_initialized = true;
 public:
     static mutex mux;
+    static bool fExit;
 };

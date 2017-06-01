@@ -11,8 +11,10 @@ bool MyoMaster::fExit = false;
 tOptions MyoMaster::opts;
 mutex MyoMaster::mux;
 
-MyoMaster::MyoMaster(int argc, char *argv[]) {
+MyoMaster::MyoMaster() {
     if (!ros::isInitialized()) {
+        int argc = 0;
+        char **argv = NULL;
         ros::init(argc, argv, "roboy_managing_node",
                           ros::init_options::AnonymousName |
                           ros::init_options::NoRosout);
@@ -22,9 +24,6 @@ MyoMaster::MyoMaster(int argc, char *argv[]) {
     motorStatus = nh->subscribe("/roboy/MotorStatus", 1, &MyoMaster::MotorStatus, this);
     motorCommand = nh->subscribe("/roboy/MotorCommand", 1, &MyoMaster::MotorCommand, this);
     motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/MotorConfig", 1);
-
-    if (getOptions(argc, argv, &opts) < 0)
-        ROS_WARN("invalid command line params");
 }
 
 MyoMaster::~MyoMaster() {
@@ -37,10 +36,11 @@ MyoMaster::~MyoMaster() {
     system_exit();
 }
 
-void MyoMaster::initialize(){
-    tOplkError ret = kErrorOk;
+void MyoMaster::initialize(int argc, char *argv[]){
+    if (getOptions(argc, argv, &opts) < 0)
+        ROS_WARN("invalid command line params");
 
-    bool powerlink_initialized = true;
+    tOplkError ret = kErrorOk;
 
     if (system_init() != 0) {
         ROS_ERROR("Error initializing system!");
@@ -80,15 +80,6 @@ void MyoMaster::initialize(){
     ret = initProcessImage();
     if (ret != kErrorOk)
         powerlink_initialized = false;
-
-    if(powerlink_initialized) {
-#ifdef RUN_IN_THREAD
-        powerLinkThread = new std::thread(&MyoMaster::mainLoop, this);
-        powerLinkThread->detach();
-#else
-        mainLoop();
-#endif
-    }
 }
 
 void MyoMaster::mainLoop() {
@@ -174,6 +165,17 @@ void MyoMaster::mainLoop() {
         system_msleep(100);
 #else
         processSync();
+#endif
+    }
+}
+
+void MyoMaster::start(){
+    if(powerlink_initialized) {
+#ifdef RUN_IN_THREAD
+        powerLinkThread = new std::thread(&MyoMaster::mainLoop, this);
+        powerLinkThread->detach();
+#else
+        mainLoop();
 #endif
     }
 }

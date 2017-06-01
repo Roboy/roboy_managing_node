@@ -9,6 +9,8 @@
 #include <roboy_communication_middleware/Steer.h>
 #include "roboy_communication_middleware/Trajectory.h"
 #include "roboy_communication_middleware/RoboyState.h"
+#include "roboy_communication_middleware/JointStatus.h"
+#include "roboy_communication_middleware/MotorStatus.h"
 
 // ros
 #include <ros/ros.h>
@@ -37,11 +39,11 @@ typedef enum {
     WaitForInitialize,
     LoadControllers,
     Controlloop,
-    PublishState,
+    ResetPowerlinkStack,
     Recording
 } ActionState;
 
-class Roboy : public hardware_interface::RobotHW {
+class Roboy : public hardware_interface::RobotHW, MyoMaster {
 public:
     /**
      * Constructor
@@ -79,6 +81,16 @@ public:
 //    static void sigintHandler(int sig);
 
 private:
+    /**
+     * Subscriber callback for joint status
+     * @param msg
+     */
+    void JointStatus(const roboy_communication_middleware::JointStatus::ConstPtr &msg);
+    /**
+     * Subscriber callback for motor status
+     * @param msg
+     */
+    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
     /*
      * This function loads the controllers registered to the individual joint interfaces
      * @param controllers names of controllers
@@ -120,7 +132,7 @@ private:
      */
     void steer_record(const roboy_communication_middleware::Steer::ConstPtr &msg);
 
-    ros::NodeHandle nh;
+    ros::NodeHandlePtr nh;
     double *cmd;
     double *pos;
     double *vel;
@@ -129,6 +141,9 @@ private:
     int8_t recording;
     bool initialized = false;
     static bool shutdown_flag;
+    boost::shared_ptr<ros::AsyncSpinner> spinner;
+    ros::Subscriber jointStatus_sub, motorStatus_sub;
+    vector<float> jointAngles;
 
     hardware_interface::JointStateInterface jnt_state_interface;
     hardware_interface::PositionJointInterface jnt_pos_interface;
@@ -140,7 +155,6 @@ private:
     ros::ServiceServer init_srv, record_srv, resetSpring_srv;
     ros::Publisher recordResult_pub;
 
-    MyoMaster *myoMaster;
     roboy_communication_middleware::RoboyState roboyStateMsg;
 
     vector<ros::Publisher> displacement_pub;
@@ -159,7 +173,8 @@ private:
     std::map<ActionState, std::string> state_strings = {
             {WaitForInitialize, "Waiting for initialization of controllers"},
             {Controlloop,       "Control loop"},
-            {Recording,         "Recording"}
+            {Recording,         "Recording"},
+            {ResetPowerlinkStack,         "Resetting Powerlink Stack"}
     };
 };
 

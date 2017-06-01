@@ -5,7 +5,8 @@
             pkg="roboy_managing_node" 
             type="roboy" 
             respawn="false"
-            output="screen" 
+            output="screen"
+            args="-c /home/roboy/workspace/roboy-ros-control/src/roboy_powerlink/powerlink/output/mnobd.cdc"
     />
 </launch>
 
