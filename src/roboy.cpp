@@ -61,14 +61,18 @@ bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::R
     vector<string> start_controllers;
     for (uint i=0; i<req.idList.size(); i++){
         char resource[100];
-		sprintf(resource, "motor%d", req.idList[i]);
-        uint ganglion = req.idList[i]/4;
-        uint motor = req.idList[i]%4;
-        ROS_INFO("motor%d control_mode %d", motor, req.controlmode[i]);
-        // connect and register the joint state interface
-        start_controllers.push_back(resource);
-		hardware_interface::JointStateHandle state_handle(resource, &pos[req.idList[i]], &vel[req.idList[i]], &eff[req.idList[i]]);
-		jnt_state_interface.registerHandle(state_handle);
+        if((uint)req.controlmode[i]!=3) {
+            sprintf(resource, "motor%d", req.idList[i]);
+            uint ganglion = req.idList[i] / 4;
+            uint motor = req.idList[i] % 4;
+            ROS_INFO("motor%d control_mode %d", motor, req.controlmode[i]);
+
+            // connect and register the joint state interface
+            start_controllers.push_back(resource);
+            hardware_interface::JointStateHandle state_handle(resource, &pos[req.idList[i]], &vel[req.idList[i]],
+                                                              &eff[req.idList[i]]);
+            jnt_state_interface.registerHandle(state_handle);
+        }
 
 		switch((uint)req.controlmode[i]){
 			case 0: {
@@ -95,8 +99,26 @@ bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::R
                 changeControl(req.idList[i],DISPLACEMENT);
 				break;
 			}
+			case 3: {
+				// connect and register the joint position interface
+                vector<int> motorIDs;
+                nh->getParam("danceMotors", motorIDs);
+                for(int motor:motorIDs) {
+                    sprintf(resource, "motor%d", motor);
+                    start_controllers.push_back(resource);
+                    hardware_interface::JointStateHandle state_handle(resource, &pos[motor], &vel[motor], &eff[motor]);
+                    jnt_state_interface.registerHandle(state_handle);
+                    hardware_interface::JointHandle eff_handle(jnt_state_interface.getHandle(resource),
+                                                               &cmd[motor]);
+                    jnt_eff_interface.registerHandle(eff_handle);
+                    changeControl(motor, DISPLACEMENT);
+                    ROS_INFO("%s dance controller", resource);
+                }
+				break;
+			}
 			default:
-				ROS_WARN("The requested controlMode is not available, choose [0]PositionController [1]VelocityController [2]DisplacementController");
+				ROS_WARN("The requested controlMode is not available, choose [0]PositionController [1]VelocityController "
+								 "[2]DisplacementController [3]DanceController");
 				break;
 		}
     }
