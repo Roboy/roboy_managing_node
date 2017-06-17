@@ -1,16 +1,34 @@
-#include "roboy_realsense/roboyRealsense.hpp"
+#include "roboy_managing_node/roboy.hpp"
+
+void update(controller_manager::ControllerManager *cm){
+    ros::Time prev_time = ros::Time::now();
+    ros::Rate rate(10);
+    while(ros::ok()){
+        const ros::Time time = ros::Time::now();
+        const ros::Duration period = time - prev_time;
+        cm->update(time,period);
+        rate.sleep();
+    }
+}
 
 int main(int argc, char* argv[])
 {
-    if (!ros::isInitialized()) {
-        int argc = 0;
-        char **argv = NULL;
-        ros::init(argc, argv, "roboyRealsense");
-    }
-    RoboyRealsense realsense;
-//    vector<int> arucoIDs = {233,553,627,628,1010,153,292,62};
-//    RoboyRealsense realsense(arucoIDs);
-    realsense.arucoDetection();
+    ros::init(argc, argv, "roboy", ros::init_options::NoRosout);
+
+    Roboy robot(argc,argv);
+
+    controller_manager::ControllerManager cm(&robot);
+
+    // we need an additional update thread, otherwise the controllers won't switch
+    thread update_thread(update, &cm);
+
+    ROS_INFO("STARTING ROBOY MAIN LOOP...");
+    
+    robot.main_loop(&cm);
+
+    update_thread.join();
+
+    ROS_INFO("TERMINATING...");
 
     return 0;
 }
