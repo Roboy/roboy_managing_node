@@ -6,6 +6,12 @@
                 respawn="false"
                 output="screen"
         />
+    <node name="PaBiRoboy_inverse_kinematics"
+                    pkg="interface"
+                    type="pabiroboy_inverse_kinematics"
+                    respawn="false"
+                    output="screen"
+            />
 	<node name="interface"
             pkg="interface"
             type="interface"
