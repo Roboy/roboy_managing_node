@@ -21,9 +21,9 @@ MyoMaster::MyoMaster() {
     }
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
 //
-    motorStatus = nh->subscribe("/roboy/MotorStatus", 1, &MyoMaster::MotorStatus, this);
-    motorCommand = nh->subscribe("/roboy/MotorCommand", 1, &MyoMaster::MotorCommand, this);
-    motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/MotorConfig", 1);
+    motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &MyoMaster::MotorStatus, this);
+    motorCommand = nh->subscribe("/roboy/middleware/MotorCommand", 1, &MyoMaster::MotorCommand, this);
+    motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/middleware/MotorConfig", 1);
 }
 
 MyoMaster::~MyoMaster() {
@@ -316,7 +316,8 @@ int MyoMaster::getOptions(int argc_p, char *const argv_p[], tOptions *pOpts_p) {
     int opt;
 
     /* setup default parameters */
-    strncpy(pOpts_p->cdcFile, "/home/roboy/workspace/roboy-ros-control/src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
+    // strncpy(pOpts_p->cdcFile, "/home/roboy/workspace/roboy-ros-control/src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
+    strncpy(pOpts_p->cdcFile, "/home/roboy/caspros_fpga/src/fpga_hardware_interface/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
     strncpy(pOpts_p->devName, "\0", 128);
     pOpts_p->pLogFile = NULL;
     pOpts_p->logFormat = kEventlogFormatReadable;
