@@ -16,7 +16,6 @@ MyoMaster::MyoMaster() {
         int argc = 0;
         char **argv = NULL;
         ros::init(argc, argv, "roboy_managing_node",
-                          ros::init_options::AnonymousName |
                           ros::init_options::NoRosout);
     }
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
@@ -316,7 +315,7 @@ int MyoMaster::getOptions(int argc_p, char *const argv_p[], tOptions *pOpts_p) {
     int opt;
 
     /* setup default parameters */
-    strncpy(pOpts_p->cdcFile, "/home/roboy/workspace/roboy-ros-control/src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
+    strncpy(pOpts_p->cdcFile, "/home/roboy/workspace/PaBiRoboy/src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
     strncpy(pOpts_p->devName, "\0", 128);
     pOpts_p->pLogFile = NULL;
     pOpts_p->logFormat = kEventlogFormatReadable;
