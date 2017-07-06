@@ -248,4 +248,5 @@ private:
 public:
     static mutex mux;
     static bool fExit;
+    static bool slaveReady;
 };

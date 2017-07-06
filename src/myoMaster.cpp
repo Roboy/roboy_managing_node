@@ -10,6 +10,7 @@ control_Parameters_t MyoMaster::MotorConfig[NUMBER_OF_CONTROL_MODES][NUMBER_OF_M
 bool MyoMaster::fExit = false;
 tOptions MyoMaster::opts;
 mutex MyoMaster::mux;
+bool MyoMaster::slaveReady = false;
 
 MyoMaster::MyoMaster() {
     if (!ros::isInitialized()) {
@@ -720,6 +721,9 @@ tOplkError MyoMaster::processNodeEvent(const tOplkApiEventNode* pNode_p,
             ROS_INFO("Node %d entered state %s\n",
                    pNode_p->nodeId,
                    debugstr_getNmtStateStr(pNode_p->nmtState));
+            slaveReady = false;
+            if(pNode_p->nmtState==kNmtCsOperational)
+                slaveReady = true;
             break;
 
         case kNmtNodeEventError:
