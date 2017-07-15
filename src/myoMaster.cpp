@@ -316,7 +316,7 @@ int MyoMaster::getOptions(int argc_p, char *const argv_p[], tOptions *pOpts_p) {
     int opt;
 
     // strncpy(pOpts_p->cdcFile, "/home/roboy/workspace/roboy-ros-control/src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
-    strncpy(pOpts_p->cdcFile, "/home/roboy/caspros_fpga/src/fpga_hardware_interface/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
+    strncpy(pOpts_p->cdcFile, "/home/roboy/workspace/PaBiRoboy/src/roboy_powerlink/powerlink/output/mnobd.cdc", 256);
     strncpy(pOpts_p->devName, "\0", 128);
     pOpts_p->pLogFile = NULL;
     pOpts_p->logFormat = kEventlogFormatReadable;
