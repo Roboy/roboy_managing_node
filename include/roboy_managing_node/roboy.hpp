@@ -45,6 +45,7 @@ using namespace Eigen;
 typedef enum {
     WaitForInitialize,
     LoadControllers,
+    Calibration,
     Controlloop,
     ResetPowerlinkStack,
     Recording,
@@ -68,6 +69,11 @@ public:
      */
     bool initializeControllers(roboy_communication_middleware::Initialize::Request &req,
                                roboy_communication_middleware::Initialize::Response &res);
+    /**
+	 * Calibrate Roboy
+	 */
+    void calibrate();
+
     /**
 	 * Read from hardware
 	 */
@@ -186,6 +192,9 @@ private:
 
     vector<ros::Publisher> displacement_pub;
 
+    //gives motor number depending on position
+    int motorNumberPositions [8];
+
     //! current state of roboy
     ActionState currentState;
 
@@ -200,6 +209,7 @@ private:
     std::map<ActionState, std::string> state_strings = {
             {WaitForInitialize, "Waiting for initialization of controllers"},
             {Controlloop,       "Control loop"},
+            {Calibration,       "Calibration"},
             {Recording,         "Recording"},
             {ResetPowerlinkStack,         "Resetting Powerlink Stack"},
             {Dancing,         "Look at me, I'm dancing"}
