@@ -239,6 +239,11 @@ bool Roboy::initializeControllers( roboy_communication_middleware::Initialize::R
     return true;
 }
 
+void Roboy::calibrate(){
+	ROS_DEBUG("calibrate");
+
+}
+
 void Roboy::read(){
     ROS_DEBUG("read");
     // nothing to be done here, since the motor status comes via ros topic /roboy/MotorStatus
@@ -284,7 +289,7 @@ void Roboy::main_loop(controller_manager::ControllerManager *ControllerManager)
                 }
 			}
 			case Controlloop: {
-                ROS_INFO_THROTTLE(5, "%s", state_strings[Controlloop].c_str());
+				ROS_INFO_THROTTLE(5, "%s", state_strings[Controlloop].c_str());
 				if (system_getTermSignalState() == TRUE) {
 					fExit = true;
 					eventlog_printMessage(kEventlogLevelInfo,
@@ -309,6 +314,12 @@ void Roboy::main_loop(controller_manager::ControllerManager *ControllerManager)
 				write();
 
 				prev_time = time;
+				break;
+			}
+			case Calibration: {
+				ROS_INFO_THROTTLE(5, "%s", state_strings[Controlloop].c_str());
+
+
 				break;
 			}
 			case Recording: {
@@ -403,6 +414,8 @@ ActionState Roboy::NextState(ActionState s)
 			newstate = Controlloop;
 			break;
 		case ResetPowerlinkStack:
+			newstate = Calibration;
+		case Calibration:
 			newstate = Controlloop;
 			break;
 		case Recording:
